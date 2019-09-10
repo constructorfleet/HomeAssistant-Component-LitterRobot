@@ -1,0 +1,12 @@
+{
+  "domain": "litter_robot",
+  "name": "Litter Robot",
+  "documentation": "https://github.com/constructorfleet/HomeAssistant-Component-LitterRobot",
+  "dependencies": [],
+  "codeowners": [
+    "@joshjcarrier",
+    "@teagan42"
+  ],
+  "requirements": [],
+  "homeassistant": "0.95.4"
+}

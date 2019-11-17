@@ -55,6 +55,7 @@ class StatusSensor(Entity):
 
     @property
     def icon(self):
+        """Return the entity icon."""
         return 'mdi:flash'
 
     @property
@@ -97,6 +98,7 @@ class WasteGaugeSensor(Entity):
 
     @property
     def icon(self):
+        """Return the entity icon."""
         return 'mdi:gauge'
 
     @property
@@ -120,6 +122,7 @@ class WasteGaugeSensor(Entity):
         if robots is not None:
             self._robot = robots[0]
 
+
 class NightLightStatusSensor(Entity):
     """Representation of the night light status sensor."""
 
@@ -131,6 +134,7 @@ class NightLightStatusSensor(Entity):
 
     @property
     def icon(self):
+        """Return the entity icon."""
         return 'mdi:lightbulb-on' if self.state == 'On' else 'mdi:lightbulb'
 
     @property

@@ -78,8 +78,8 @@ class LitterRobotConnection:
     def robots(self):
         """Retrieve robots from API."""
         response = requests.get(
-            f'https://muvnkjeut7.execute-api.us-east-1.amazonaws.com/'
-            f'staging/users/{self._user_id}/litter-robots',
+            'https://muvnkjeut7.execute-api.us-east-1.amazonaws.com/'
+            'staging/users/%s/litter-robots' % self._user_id,
             headers={'x-api-key': self._x_api_key, 'Authorization': self._auth_token})
         response_json = response.json()
         return response_json
@@ -87,8 +87,8 @@ class LitterRobotConnection:
     def dispatch_command(self, robot_id, command):
         """Execute command to Litter Robot."""
         requests.post(
-            f'https://muvnkjeut7.execute-api.us-east-1.amazonaws.com/'
-            f'staging/users/{self._user_id}/litter-robots/{robot_id}/dispatch-commands',
+            'https://muvnkjeut7.execute-api.us-east-1.amazonaws.com/'
+            'staging/users/{self._user_id}/litter-robots/%s/dispatch-commands' % robot_id,
             json={
                 'command': command,
                 'litterRobotId': robot_id

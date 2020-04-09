@@ -13,18 +13,19 @@ LITTER_ROBOT_DOMAIN = 'litter_robot'
 LITTER_ROBOT_LOGIN = 'litter_robot_login'
 LITTER_ROBOTS = 'litter_robots'
 LITTER_ROBOT_UNIT_STATUS = {
-    'RDY': 'Ready',
-    'CCP': 'Clean Cycling',
-    'CCC': 'Ready',
-    'DF1': 'Ready - Drawer Warning',
-    'DF2': 'Ready - Drawer Warning',
-    'CSI': 'Cat Sensor Interrupt',
-    'CST': 'Cat Sensor Timing',
-    'BR': 'Bonnet Removed',
-    'P': 'Paused',
-    'OFF': 'Off',
-    'SDF': 'Not Ready - Drawer Full',
-    'DFS': 'Not Ready - Drawer Full'
+  'RDY': 'Ready',
+  'CCP': 'Clean Cycling',
+  'CCC': 'Ready - Clean Cycling Complete',
+  'DF1': 'Ready - 2 Cycles Until Full',
+  'DF2': 'Ready - 1 Cycle Until Full',
+  'CSI': 'Cat Sensor Interrupt',
+  'CST': 'Cat Sensor Timing',
+  'BR' : 'Bonnet Removed',
+  'P'  : 'Paused',
+  'OFF': 'Off',
+  'SDF': 'Not Ready - Drawer Full',
+  'DFS': 'Not Ready - Drawer Full',
+  'CSF': 'Cat Sensor Interrupted'
 }
 SENSOR_PREFIX = 'Litter-Robot '
 
@@ -55,13 +56,19 @@ class StatusSensor(Entity):
 
     @property
     def icon(self):
-        """Return the entity icon."""
         return 'mdi:flash'
 
     @property
     def name(self):
         """Return the state of the sensor."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return information about the device."""
+        return {
+            "litter_robot_id": self._robot['litterRobotId']
+        }
 
     @property
     def state(self):
@@ -73,7 +80,7 @@ class StatusSensor(Entity):
             if int(sleep_mode_active[1:].split(':')[0]) < 8:
                 return 'Sleeping'
 
-        return LITTER_ROBOT_UNIT_STATUS[unit_status]
+        return LITTER_ROBOT_UNIT_STATUS.get(unit_status, unit_status)
 
     @property
     def unit_of_measurement(self):
@@ -84,7 +91,7 @@ class StatusSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = robots[0]
+            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]
 
 
 class WasteGaugeSensor(Entity):
@@ -98,7 +105,6 @@ class WasteGaugeSensor(Entity):
 
     @property
     def icon(self):
-        """Return the entity icon."""
         return 'mdi:gauge'
 
     @property
@@ -120,8 +126,7 @@ class WasteGaugeSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = robots[0]
-
+            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]
 
 class NightLightStatusSensor(Entity):
     """Representation of the night light status sensor."""
@@ -134,7 +139,6 @@ class NightLightStatusSensor(Entity):
 
     @property
     def icon(self):
-        """Return the entity icon."""
         return 'mdi:lightbulb-on' if self.state == 'On' else 'mdi:lightbulb'
 
     @property
@@ -156,4 +160,4 @@ class NightLightStatusSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = robots[0]
+            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]

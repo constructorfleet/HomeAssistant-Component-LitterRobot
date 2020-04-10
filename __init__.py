@@ -78,7 +78,7 @@ class LitterRobotConnection:
             'grant_type': 'password',
             'username': self._username,
             "password": self._password
-            })
+        })
         response_json = response.json()
         self._auth_token = response_json['access_token']
         claims = jwt.decode(response_json['access_token'], verify=False)

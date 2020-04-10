@@ -5,16 +5,13 @@ https://home-assistant.io/components/
 """
 import logging
 from datetime import timedelta
-import jwt
-import requests
-
-import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+import jwt
+import requests
+import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,9 +43,9 @@ SERVICE_CYCLE_SCHEMA = vol.Schema(
     {vol.Optional('litter_robot_id'): cv.string}
 )
 
+
 def setup(hass, config):
     """Set up the Litter-Robot component."""
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][LITTER_ROBOT_LOGIN] = LitterRobotHub(
         hass, config[DOMAIN], LitterRobotConnection)
@@ -63,13 +60,18 @@ def setup(hass, config):
 
 
 class LitterRobotConnection:
+    """Connection to the api."""
 
     def __init__(self, username, password):
+        """Initialize the connection."""
         self._username = username
         self._password = password
+        self._auth_token = None
+        self._user_id = None
         self._x_api_key = 'p7ndMoj61npRZP5CVz9v4Uj0bG769xy6758QRBPb'
 
     def login(self):
+        """Login to the api."""
         response = requests.post('https://autopets.sso.iothings.site/oauth/token', data={
             'client_id': 'IYXzWN908psOm7sNpe4G.ios.whisker.robots',
             'client_secret': 'C63CLXOmwNaqLTB2xXo6QIWGwwBamcPuaul',
@@ -83,16 +85,30 @@ class LitterRobotConnection:
         self._user_id = claims.get('userId')
 
     def robots(self):
+        """Get the robots as JSON."""
         self.login()
-        response = requests.get('https://v2.api.whisker.iothings.site/users/' + self._user_id +
-                                '/robots', headers={'x-api-key': self._x_api_key, 'Authorization': self._auth_token})
+        response = requests.get(
+            'https://v2.api.whisker.iothings.site/users/' + self._user_id + '/robots', headers={
+                'x-api-key': self._x_api_key,
+                'Authorization': self._auth_token})
         response_json = response.json()
         return response_json
 
     def dispatch_command(self, robot_id, command):
+        """Dispatch command to the specified robot id."""
         self.login()
-        response = requests.post('https://v2.api.whisker.iothings.site/users/' + self._user_id + '/robots/' + robot_id + '/dispatch-commands', json={
-                                'command': command, 'litterRobotId': robot_id }, headers={'x-api-key': self._x_api_key, 'Authorization': self._auth_token})
+        response = requests.post(
+            'https://v2.api.whisker.iothings.site/users/' + self._user_id + '/robots/' +
+            robot_id + '/dispatch-commands',
+            json={
+                'command': command,
+                'litterRobotId': robot_id},
+            headers={'x-api-key': self._x_api_key, 'Authorization': self._auth_token})
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as err:
+            _LOGGER.error("Error distpatching command: %s", str(err))
+
 
 class LitterRobotHub:
     """A My Litter-Robot hub wrapper class."""
@@ -106,15 +122,22 @@ class LitterRobotHub:
         self._my_litter_robots = my_litter_robots
 
         def get_litter_robot_id(self, call_data):
+            """Retrieve the litter robot id."""
             litter_robot_id = call_data.get('litter_robot_id', None)
             if litter_robot_id is not None:
-                return [x for x in self._hass.data[DOMAIN][LITTER_ROBOTS] if x['litterRobotId'] == litter_robot_id][0]['litterRobotId']
+                return [x for x
+                        in self._hass.data[DOMAIN][LITTER_ROBOTS]
+                        if x['litterRobotId'] == litter_robot_id][0]['litterRobotId']
             return self._hass.data[DOMAIN][LITTER_ROBOTS][0]['litterRobotId']
 
         def set_litter_robot_state(self, litter_robot_id, key, value):
-            [x for x in self._hass.data[DOMAIN][LITTER_ROBOTS] if x['litterRobotId'] == litter_robot_id][0][key] = value
+            """Set the state of the litter robot."""
+            [x for x
+             in self._hass.data[DOMAIN][LITTER_ROBOTS]
+             if x['litterRobotId'] == litter_robot_id][0][key] = value
 
         def handle_nightlight_turn_on(call):
+            """Nightlight turn on service handler."""
             try:
                 robot_id = get_litter_robot_id(self, call.data)
                 my_litter_robots.dispatch_command(robot_id, '<N1')
@@ -123,6 +146,7 @@ class LitterRobotHub:
                 _LOGGER.error("Unable to send <N1 command to Litter-Robot API %s", ex)
 
         def handle_nightlight_turn_off(call):
+            """Nightlight turn off service handler."""
             try:
                 robot_id = get_litter_robot_id(self, call.data)
                 my_litter_robots.dispatch_command(robot_id, '<N0')
@@ -131,15 +155,28 @@ class LitterRobotHub:
                 _LOGGER.error("Unable to send <N0 command to Litter-Robot API %s", ex)
 
         def handle_cycle(call):
+            """Cycle service handler."""
             try:
                 robot_id = get_litter_robot_id(self, call.data)
                 my_litter_robots.dispatch_command(robot_id, '<C')
             except Exception as ex:
                 _LOGGER.error("Unable to send <C command to Litter-Robot API %s", ex)
 
-        hass.services.register(DOMAIN, 'nightlight_turn_on', handle_nightlight_turn_on, SERVICE_NIGHTLIGHT_TURN_ON_SCHEMA)
-        hass.services.register(DOMAIN, 'nightlight_turn_off', handle_nightlight_turn_off, SERVICE_NIGHTLIGHT_TURN_OFF_SCHEMA)
-        hass.services.register(DOMAIN, 'cycle', handle_cycle, SERVICE_CYCLE_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            'nightlight_turn_on',
+            handle_nightlight_turn_on,
+            SERVICE_NIGHTLIGHT_TURN_ON_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            'nightlight_turn_off',
+            handle_nightlight_turn_off,
+            SERVICE_NIGHTLIGHT_TURN_OFF_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            'cycle',
+            handle_cycle,
+            SERVICE_CYCLE_SCHEMA)
 
     def login(self):
         """Login to My Litter-Robot."""
@@ -147,8 +184,8 @@ class LitterRobotHub:
             _LOGGER.info("Trying to connect to Litter-Robot API")
             self._my_litter_robots.login()
             return True
-        except:
-            _LOGGER.error("Unable to connect to Litter-Robot API")
+        except Exception as err:
+            _LOGGER.error("Unable to connect to Litter-Robot API: %s", str(err))
             return False
 
     @Throttle(timedelta(seconds=120))

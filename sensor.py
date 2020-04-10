@@ -5,6 +5,7 @@ https://home-assistant.io/components/
 """
 
 import logging
+
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['litter_robot']
@@ -13,19 +14,19 @@ LITTER_ROBOT_DOMAIN = 'litter_robot'
 LITTER_ROBOT_LOGIN = 'litter_robot_login'
 LITTER_ROBOTS = 'litter_robots'
 LITTER_ROBOT_UNIT_STATUS = {
-  'RDY': 'Ready',
-  'CCP': 'Clean Cycling',
-  'CCC': 'Ready - Clean Cycling Complete',
-  'DF1': 'Ready - 2 Cycles Until Full',
-  'DF2': 'Ready - 1 Cycle Until Full',
-  'CSI': 'Cat Sensor Interrupt',
-  'CST': 'Cat Sensor Timing',
-  'BR' : 'Bonnet Removed',
-  'P'  : 'Paused',
-  'OFF': 'Off',
-  'SDF': 'Not Ready - Drawer Full',
-  'DFS': 'Not Ready - Drawer Full',
-  'CSF': 'Cat Sensor Interrupted'
+    'RDY': 'Ready',
+    'CCP': 'Clean Cycling',
+    'CCC': 'Ready - Clean Cycling Complete',
+    'DF1': 'Ready - 2 Cycles Until Full',
+    'DF2': 'Ready - 1 Cycle Until Full',
+    'CSI': 'Cat Sensor Interrupt',
+    'CST': 'Cat Sensor Timing',
+    'BR': 'Bonnet Removed',
+    'P': 'Paused',
+    'OFF': 'Off',
+    'SDF': 'Not Ready - Drawer Full',
+    'DFS': 'Not Ready - Drawer Full',
+    'CSF': 'Cat Sensor Interrupted'
 }
 SENSOR_PREFIX = 'Litter-Robot '
 
@@ -91,7 +92,8 @@ class StatusSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]
+            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][
+                0]
 
 
 class WasteGaugeSensor(Entity):
@@ -126,7 +128,10 @@ class WasteGaugeSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]
+            self._robot = [x for x
+                           in robots
+                           if x['litterRobotId'] == self._robot['litterRobotId']][0]
+
 
 class NightLightStatusSensor(Entity):
     """Representation of the night light status sensor."""
@@ -160,4 +165,6 @@ class NightLightStatusSensor(Entity):
         """Update the state from the sensor."""
         robots = self._controller.update_robots()
         if robots is not None:
-            self._robot = [x for x in robots if x['litterRobotId'] == self._robot['litterRobotId']][0]
+            self._robot = [x for x
+                           in robots
+                           if x['litterRobotId'] == self._robot['litterRobotId']][0]
